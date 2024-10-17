@@ -525,8 +525,8 @@ def save_stream_to_tab_delimited(stream, filename):
 def process_and_save_stacks(data_dir, output_dir, groups, geophone_array,
                             overwrite=False, save_mseed=True, 
                             save_tab=False, save_su=False, save_segy=False,
-                            startbuffer=1.01, endbuffer=1.5, save_in_single_dir=False, detrend=True, 
-                            response=False,  freqmin=None, freqmax=None):
+                            startbuffer=1.01, endbuffer=1.5, save_in_single_dir=False, 
+                            detrend=True, response=False,  freqmin=None, freqmax=None):
     """
     Processes groups of shots, stacks the traces for each channel, and saves the results into a specified output directory.
 
@@ -586,21 +586,21 @@ def process_and_save_stacks(data_dir, output_dir, groups, geophone_array,
         geophone_index = 0
         for rec, chan, source_distance in geophone_array.iter_reverse():
             stacked = stack_channel(group, ref_time, recorder=rec, channel=chan, base_directory=data_dir, 
-                                    order=1, endbuffer=endbuffer, startbuffer=startbuffer)
+                                    order=1, endbuffer=endbuffer, startbuffer=startbuffer, 
+                                    detrend=detrend, response=response,  freqmin=freqmin, freqmax=freqmax)
             trace = stacked[0]
             trace.stats.distance = source_distance
+            #all this gets handled by stack_channel
             # Remove response if provided
-            if response:
-                inv = build_inventory_from_trace_and_response(trace, response)
-                trace.attach_response(inv)
-                trace.remove_response()
+            #if response:
+            #    inv = build_inventory_from_trace_and_response(trace, response)
+            #    trace.attach_response(inv)
+            #    trace.remove_response()
             # Apply bandpass filter if frequencies are provided
-            if freqmin is not None and freqmax is not None:
-                trace.filter("bandpass", freqmin=freqmin, freqmax=freqmax)
-
-
-            if detrend is True:
-                trace.detrend(type='linear')
+            #if freqmin is not None and freqmax is not None:
+            #    trace.filter("bandpass", freqmin=freqmin, freqmax=freqmax)
+            #if detrend is True:
+            #    trace.detrend(type='linear')
             stacked_stream.append(trace)
         
         # Save the stacked stream based on the flags
@@ -633,8 +633,8 @@ def process_and_save_stacks(data_dir, output_dir, groups, geophone_array,
 
 def save_individual_shots(data_dir, output_dir, groups, geophone_array,
                           target_number, startbuffer=1.01, endbuffer=1.5,
-                          overwrite=False, save_mseed=True, detrend=True, 
-                          response=False,  freqmin=None, freqmax=None):
+                          overwrite=False, save_mseed=True, 
+                          detrend=True, response=False,  freqmin=None, freqmax=None):
     """
     Processes groups of shots and saves each shot individually, ensuring each group has the target number of shots.
 
@@ -680,19 +680,21 @@ def save_individual_shots(data_dir, output_dir, groups, geophone_array,
             stacked_stream = obspy.Stream()
             for rec, chan, source_distance in geophone_array.iter_reverse():
                 stacked = stack_channel([shot], ref_time, recorder=rec, channel=chan, base_directory=data_dir, 
-                                        order=1, endbuffer=endbuffer, startbuffer=startbuffer)
+                                        order=1, endbuffer=endbuffer, startbuffer=startbuffer, 
+                                        detrend=detrend, response=response,  freqmin=freqmin, freqmax=freqmax)
                 trace = stacked[0]
                 trace.stats.distance = source_distance
+                #all this gets handled by stack_channel
                 # Remove response if provided
-                if response:
-                    inv = build_inventory_from_trace_and_response(trace, response)
-                    trace.attach_response(inv)
-                    trace.remove_response()
-                # Apply bandpass filter if frequencies are provided
-                if freqmin is not None and freqmax is not None:
-                    trace.filter("bandpass", freqmin=freqmin, freqmax=freqmax)
-                if detrend is True:
-                    trace.detrend(type='linear')
+                #if response:
+                #    inv = build_inventory_from_trace_and_response(trace, response)
+                #    trace.attach_response(inv)
+                #    trace.remove_response()
+                ## Apply bandpass filter if frequencies are provided
+                #if freqmin is not None and freqmax is not None:
+                #    trace.filter("bandpass", freqmin=freqmin, freqmax=freqmax)
+                #if detrend is True:
+                #    trace.detrend(type='linear')
                 stacked_stream.append(trace)
 
             # Save the shot as MiniSEED
